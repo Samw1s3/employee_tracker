@@ -47,9 +47,9 @@ const badCompany = () => {
                 "Add a department",
                 "Add an employee",
                 "Add a role",
-                "View a department",
+                "View all departments",
                 "View employees",
-                "View a role",
+                "View current roles",
                 "Update employee roles",
                 "Delete department",
                 "Delete role",
@@ -71,7 +71,7 @@ const badCompany = () => {
                     addRole();
                     break;
           
-                  case "View a department":
+                  case "View all departments":
                     viewDepartments();
                     break;
           
@@ -79,7 +79,7 @@ const badCompany = () => {
                     viewEmployees();
                     break;
           
-                  case "View a role":
+                  case "View current roles":
                     viewRoles();
                     break;
               
@@ -263,6 +263,12 @@ const addDepartment = () => {
   };
 
   const updateEmpRole = () => {
+    const query = `SELECT * FROM employees; SELECT * FROM roles;`;
+    connection.query(query, (err, results) => {
+      if (err) throw err;
+      console.table(results[0]);
+      console.table(results[1]);
+    });
     inquirer
       .prompt([
         {
