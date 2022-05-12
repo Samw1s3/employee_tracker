@@ -1,17 +1,17 @@
 
 const mysql = require("mysql2");
 const inquirer = require("inquirer");
+require('dotenv').config();
 
 
 // connect to mysql db
 
 const connection = mysql.createConnection(
     {
-        host:'localhost',
-        
-        user: 'root',
-        password: 'password87',
-        database: 'employee_cms',
+        host: process.env.DB_HOST || "localhost",
+        user: process.env.DB_USER || "root",
+        password: process.env.DB_PASSWORD,
+        database: process.env.DB_DATABASE,
     },
     console.log("Connected to employee_cms database")
 );
@@ -32,7 +32,7 @@ const askNewEmployee = [
 ];
 
 const roleQuery = 
-    'SELECT * FROM roles; SELECT CONCAT (e.first_name, " ",e.last_name) AS full_name FROM employees e';
+    `SELECT * FROM roles; SELECT CONCAT (first_name, " ",last_name) AS full_name FROM employees`;
 
 const allStaff = `SELECT e.id, e.first_name AS "First Name", e.last_name AS "Last Name", r.title, AS "Department", IFNULL(r.salary, 'No Data') AS "Salary", CONCAT(m.first_name, " ",m.last_name) AS "Manager"
 FROM employees e
@@ -125,7 +125,7 @@ const addDepartment = () => {
     connection.query(query, (err, results) => {
       if (err) throw err;
   
-      console.log(chalk.green("List of current departments"));
+      console.log("List of current departments");
   
       console.table(results);
   
