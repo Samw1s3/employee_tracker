@@ -12,6 +12,7 @@ const connection = mysql.createConnection(
         user: process.env.DB_USER || "root",
         password: process.env.DB_PASSWORD,
         database: process.env.DB_DATABASE,
+        multipleStatements: true,
     },
     console.log("Connected to employee_cms database")
 );
@@ -32,18 +33,9 @@ const askNewEmployee = [
 ];
 
 const roleQuery = 
-    `SELECT * FROM roles; SELECT CONCAT (first_name, " ",last_name) AS full_name FROM employees`;
+    `SELECT * FROM roles; SELECT CONCAT(first_name,'',last_name) AS full_name FROM employees;`;
 
-const allStaff = `SELECT e.id, e.first_name AS "First Name", e.last_name AS "Last Name", r.title, AS "Department", IFNULL(r.salary, 'No Data') AS "Salary", CONCAT(m.first_name, " ",m.last_name) AS "Manager"
-FROM employees e
-LEFT JOIN roles roleQuery
-ON r.id = e.role_id
-LEFT JOIN departments d
-ON d.did = r.department_id
-LEFT JOIN employees m on m.id = e.manager_id
-ORDER BY e.id;`;
-
-const managerQuery = `SELECT CONCAT (e.first_name," ",e.last_name) AS full_name,r.title, d.name FROM employees e INNER JOIN roles r ON r.id = e.role_id INNER JOIN departments d ON d.did =r.department_id WHERE name = "Management";`
+const allStaff = `SELECT * FROM employees`;
 
 const badCompany = () => {
     inquirer
@@ -59,7 +51,6 @@ const badCompany = () => {
                 "View employees",
                 "View a role",
                 "Update employee roles",
-                "View employees by manager",
                 "Delete department",
                 "Delete role",
                 "Delete employee",
@@ -90,10 +81,6 @@ const badCompany = () => {
           
                   case "View a role":
                     viewRoles();
-                    break;
-
-                case "View employees by manager":
-                    viewEmpByManager();
                     break;
               
                 case "Update employee roles":
@@ -129,7 +116,7 @@ const addDepartment = () => {
   
       console.table(results);
   
-      // ask what the name is for the new dept
+      // ask what the name is for the new 
       inquirer
         .prompt([
           {
@@ -198,7 +185,7 @@ const addDepartment = () => {
             `INSERT INTO employees(first_name,last_name, role_id, manager_id) 
             VALUES (?,?, 
               (SELECT id FROM roles WHERE title = ?), 
-              (SELECT id FROM (SELECT id FROM employees WHERE CONCAT(first_name,'',last_name) = ?)
+              (SELECT id FROM (SELECT id FROM employees WHERE CONCAT(first_name,last_name) = ?)
               AS tmptable))`,
             [answer.fName, answer.lName, answer.role, answer.manager]
           );
@@ -212,7 +199,7 @@ const addDepartment = () => {
     connection.query(addRoleQuery, (err, results) => {
       if (err) throw err;
   
-      console.log(chalk.blue("List of current roles"));
+      console.log("List of current roles");
       console.table(results[0]);
   
       inquirer
@@ -242,7 +229,7 @@ const addDepartment = () => {
         .then((answer) => {
           connection.query(`INSERT INTO roles(title, salary, department_id) 
                   VALUES("${answer.newTitle}","${answer.newSalary}", 
-                  (SELECT did FROM departments WHERE name = "${answer.dept}"));`);
+                  (SELECT id FROM departments WHERE name = "${answer.dept}"));`);
           badCompany();
         });
     });
@@ -275,43 +262,43 @@ const addDepartment = () => {
     });
   };
 
-  const viewEmpByManager = () => {
-    connection.query(managerQuery, (err, results) => {
-      if (err) throw err;
+//   const viewEmpByManager = () => {
+//     connection.query(managerQuery, (err, results) => {
+//       if (err) throw err;
   
-      inquirer
-        .prompt([
-          {
-            name: "m_choice",
-            type: "list",
-            choices: function () {
-              let choiceArr = results.map((choice) => choice.full_name);
-              return choiceArr;
-            },
-            message: "Select a Manager:",
-          },
-        ])
-        .then((answer) => {
-          const managerQuery2 = `SELECT e.id, e.first_name AS "First Name", e.last_name AS "Last Name", IFNULL(r.title, "No Data") AS "Title", IFNULL(d.name, "No Data") AS "Department", IFNULL(r.salary, 'No Data') AS "Salary", CONCAT(m.first_name," ",m.last_name) AS "Manager"
-                                FROM employees e
-                                LEFT JOIN roles r 
-                                ON r.id = e.role_id 
-                                LEFT JOIN departments d 
-                                ON d.did = r.department_id
-                                LEFT JOIN employees m ON m.id = e.manager_id
-                                WHERE CONCAT(m.first_name," ",m.last_name) = ?
-                                ORDER BY e.id;`;
-          connection.query(managerQuery2, [answer.m_choice], (err, results) => {
-            if (err) throw err;
+//       inquirer
+//         .prompt([
+//           {
+//             name: "m_choice",
+//             type: "list",
+//             choices: function () {
+//               let choiceArr = results.map((choice) => choice.full_name);
+//               return choiceArr;
+//             },
+//             message: "Select a Manager:",
+//           },
+//         ])
+//         .then((answer) => {
+//           const managerQuery2 = `SELECT id, first_name AS "First Name", last_name AS "Last Name", IFNULL(title, "No Data") AS "Title", IFNULL(name, "No Data") AS "Department", IFNULL(salary, 'No Data') AS "Salary", CONCAT(first_name," ",last_name) AS "Manager"
+//                                 FROM employees 
+//                                 LEFT JOIN roles  
+//                                 ON id = role_id 
+//                                 LEFT JOIN departments
+//                                 ON id = department_id
+//                                 LEFT JOIN employees ON id = manager_id
+//                                 WHERE CONCAT(first_name," ",last_name) = ?
+//                                 ORDER BY id;`;
+//           connection.query(managerQuery2, [answer.m_choice], (err, results) => {
+//             if (err) throw err;
   
-            console.log(" ");
-            console.table(chalk.blue("Employee by Manager"), results);
+//             console.log(" ");
+//             console.table("Employee by Manager", results);
   
-            badCompany();
-          });
-        });
-    });
-  };
+//             badCompany();
+//           });
+//         });
+//     });
+//   };
 
   const updateEmpRole = () => {
     inquirer
@@ -368,7 +355,7 @@ const addDepartment = () => {
   };
   
   const deleteRole = () => {
-    query = `SELECT * FROM roles`;
+    query = "SELECT * FROM roles;";
     connection.query(query, (err, results) => {
       if (err) throw err;
   
