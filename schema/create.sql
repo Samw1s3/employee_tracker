@@ -5,7 +5,7 @@ USE employee_cms;
 
 CREATE TABLE departments (
   id INT NOT NULL AUTO_INCREMENT,
-  name VARCHAR(45) NULL,
+  department_name VARCHAR(45) NULL,
   PRIMARY KEY (id)
   );
 

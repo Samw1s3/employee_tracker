@@ -127,7 +127,7 @@ const addDepartment = () => {
         ])
         .then((answer) => {
           connection.query(
-            `INSERT INTO departments(name) VALUES(?)`,
+            `INSERT INTO departments(department_name) VALUES(?)`,
             [answer.newDept],
             (err, results) => {
               badCompany();
@@ -207,29 +207,29 @@ const addDepartment = () => {
           {
             name: "newTitle",
             type: "input",
-            message: "What is the new title?",
+            message: "What is the title of the new role?",
           },
           {
             name: "newSalary",
             type: "input",
-            message: "What is the salary amount for the new title:",
+            message: "What is the salary amount for the new role:",
           },
           {
             name: "dept",
             type: "list",
             // A FX that creates a new array from the department table
             //and loops through the name column and returns the new array
-            choice: function () {
-              let choiceArr = results[1].map((choice) => choice.name);
+            choices: function () {
+              let choiceArr = results[1].map((choice) => choice.department_name);
               return choiceArr;
             },
-            message: "Choose the department for the new title?",
+            message: "Choose the department id for the new role?",
           },
         ])
         .then((answer) => {
           connection.query(`INSERT INTO roles(title, salary, department_id) 
                   VALUES("${answer.newTitle}","${answer.newSalary}", 
-                  (SELECT id FROM departments WHERE name = "${answer.dept}"));`);
+                  (SELECT id FROM departments WHERE department_name = "${answer.dept}"));`);
           badCompany();
         });
     });
@@ -261,44 +261,6 @@ const addDepartment = () => {
       badCompany();
     });
   };
-
-//   const viewEmpByManager = () => {
-//     connection.query(managerQuery, (err, results) => {
-//       if (err) throw err;
-  
-//       inquirer
-//         .prompt([
-//           {
-//             name: "m_choice",
-//             type: "list",
-//             choices: function () {
-//               let choiceArr = results.map((choice) => choice.full_name);
-//               return choiceArr;
-//             },
-//             message: "Select a Manager:",
-//           },
-//         ])
-//         .then((answer) => {
-//           const managerQuery2 = `SELECT id, first_name AS "First Name", last_name AS "Last Name", IFNULL(title, "No Data") AS "Title", IFNULL(name, "No Data") AS "Department", IFNULL(salary, 'No Data') AS "Salary", CONCAT(first_name," ",last_name) AS "Manager"
-//                                 FROM employees 
-//                                 LEFT JOIN roles  
-//                                 ON id = role_id 
-//                                 LEFT JOIN departments
-//                                 ON id = department_id
-//                                 LEFT JOIN employees ON id = manager_id
-//                                 WHERE CONCAT(first_name," ",last_name) = ?
-//                                 ORDER BY id;`;
-//           connection.query(managerQuery2, [answer.m_choice], (err, results) => {
-//             if (err) throw err;
-  
-//             console.log(" ");
-//             console.table("Employee by Manager", results);
-  
-//             badCompany();
-//           });
-//         });
-//     });
-//   };
 
   const updateEmpRole = () => {
     inquirer
@@ -338,7 +300,7 @@ const addDepartment = () => {
             type: "list",
             // make a new array and loop through, return each item ie.(department)
             choices: function () {
-              let choiceArr = results.map((choice) => choice.name);
+              let choiceArr = results.map((choice) => choice.department_name);
               return choiceArr;
             },
             // pick the array item to be deleted
@@ -364,7 +326,7 @@ const addDepartment = () => {
           {
             name: "removeRole",
             type: "list",
-            choice: function () {
+            choices: function () {
               let choiceArr = results.map((choice) => choice.title);
               return choiceArr;
             },
